@@ -91,7 +91,7 @@ class ManifestMaker:
         }
 
         self._uri_schemes = ('file', 'pipe', 'tcp', 'udp')
-        self._fstypes = ('chroot', 'nextfs', 'smdish', 'smtcad', 'sm0', 'tnt')
+        self._fstypes = ('chroot', 'nextfs', 'smdish', 'smuf', 'smc', 'tnt')
         self._glibc_libs = (
             'ld-linux-x86-64.so.2',
             'libc.so',
