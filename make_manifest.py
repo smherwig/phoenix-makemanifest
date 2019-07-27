@@ -91,7 +91,7 @@ class ManifestMaker:
         }
 
         self._uri_schemes = ('file', 'pipe', 'tcp', 'udp')
-        self._fstypes = ('chroot', 'nextfs', 'smdish', 'smuf', 'smc', 'tnt')
+        self._fstypes = ('chroot', 'nextfs', 'smdish', 'smuf', 'smc')
         self._glibc_libs = (
             'ld-linux-x86-64.so.2',
             'libc.so',
@@ -273,28 +273,81 @@ class ManifestMaker:
     #------------------------------------------------------
     # directive handlers
     #------------------------------------------------------
-
-    def _mount_fn(self, host_uri, graphene_path, fstype, *options):
-        self._check_uri(host_uri)
-        self._check_fstype(fstype)
+    def _mount_generic(self, host_uri, graphene_path, fstype):
         name = self._make_name(graphene_path)
         self._out('fs.mount.%s.type = %s' % (name, fstype))
         self._out('fs.mount.%s.path = %s' % (name, graphene_path))
         self._out('fs.mount.%s.uri = %s' % (name, host_uri))
 
+    def _mount_chroot(self, host_uri, graphene_path, *options):
+        self._mount_generic(host_uri, graphene_path, 'chroot')
         # special case for ro/rw option for chroot
         # no additional work for ro; for rw, must add mount to list
         # of allowed files.
-        if fstype == 'chroot': 
-            if len(options) != 1:
-                self._parse_err('chroot mount: missing ro/rw option')
-            opt = options[0]
-            if opt not in ('ro', 'rw'):
-                self._parse_err('chroot mount: invalid option \"%s\"', opt)
-            if opt == 'ro':
-                self.ro_uris.append(host_uri)
-            else:
-                self.rw_uris.append(host_uri)
+        if len(options) != 1:
+            self._parse_err('chroot mount: missing ro/rw option')
+        opt = options[0]
+        if opt not in ('ro', 'rw'):
+            self._parse_err('chroot mount: invalid option \"%s\"', opt)
+        if opt == 'ro':
+            self.ro_uris.append(host_uri)
+        else:
+            self.rw_uris.append(host_uri)
+
+    def _mount_nextfs(self, host_uri, graphene_path, *options):
+        self._mount_generic(host_uri, graphene_path, 'nextfs')
+
+    def _mount_smdish(self, host_uri, graphene_path, *options):
+        self._mount_generic(host_uri, graphene_path, 'smdish')
+
+    def _mount_smuf(self, host_uri, graphene_path, *options):
+        # used to be configured as:
+        #   MOUNT pipe:2011863273 /memserver0 smuf
+        #   MOUNT file:/home/smherwig/phoenix/memfiles/0 /memfiles0 chroot rw
+        #
+        # Now, combine mounts in one-line:
+        #   MOUNT pipe:2011863273,file:/home/smherwig/phoenix/memfiles/0 /memserver0,/memfiles0 smuf
+        #
+        # Since smuf needs the path of the memfiles, both the pipe:,file: are
+        # used as the uri for smuf.
+        uris = host_uri.split(',')
+        if len(uris) != 2:
+            self._parse_err('smuf mount: invalid host uri \"%s\"', host_uri)
+        paths = graphene_path.split(',')
+        if len(paths) != 2:
+            self._parse_err('smuf mount: invalid path \"%s\"', host_uri)
+        self._mount_generic(host_uri, paths[0], 'smuf')
+        self._mount_chroot(uris[1], paths[1], 'rw') 
+
+    def _mount_smc(self, host_uri, graphene_path, *options):
+        # Used to be configured as:
+        #   MOUNT file:memory /memserver0 smc
+
+        # Now configured as:
+        #   MOUNT file:/home/smherwig/phoenix/memfiles/0 /memserver0,/memfiles0 smc
+        #
+        # Now, host_uri is the uri for the chroot mount of the memfiles:
+        paths = graphene_path.split(',')
+        if len(paths) != 2:
+            self._parse_err('smc mount: invalid path \"%s\"', host_uri)
+        self._mount_generic(host_uri, paths[0], 'smc') 
+        self._mount_chroot(host_uri, paths[1], 'rw') 
+
+    def _mount_fn(self, host_uri, graphene_path, fstype, *options):
+        ftab = {
+                'chroot': self._mount_chroot, 
+                'nextfs': self._mount_nextfs,
+                'smdish': self._mount_smdish,
+                'smuf': self._mount_smuf,
+                'smc': self._mount_smc
+                }
+
+        self._check_uri(host_uri)
+        try:
+            mountfn = ftab[fstype]
+        except KeyError:
+            self._parse_error('unrecognized fstype \"%s\"', fstype)
+        mountfn(host_uri, graphene_path, *options)
 
     def _debug_fn(self, onoff):
         if onoff == 'on':
@@ -453,11 +506,11 @@ class ManifestMaker:
                 if not directive.varargs:
                     if nargs != directive.nargs:
                         self._parse_err('directive \"%s\" takes %d args, but %d given',
-                                directive.nargs, nargs)
+                                name, directive.nargs, nargs)
                 else:
                     if nargs < directive.nargs:
                         self._parse_err('directive \"%s\" needs at least %d args, but only %d given',
-                                directive.nargs, nargs)
+                                name, directive.nargs, nargs)
                 directive.fn(*args)  
 
         self._postprocess()
