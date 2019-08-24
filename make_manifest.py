@@ -480,6 +480,7 @@ class ManifestMaker:
         self._postprocess_ro_uris()
         self._add_lib_mounts()
         self._add_loader_cmds()
+        #self._out('sgx.debug = 1')
 
     def _shebang_line(self):
         loader_path = os.path.join(self.graphene, 'Runtime', 'pal_loader')
@@ -535,7 +536,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv[1:], shortopts, longopts)
     except getopt.GetoptError as err:
-        sys.stderr.write('%s\n', str(errr))
+        sys.stderr.write('%s\n' % str(err))
         _usage(1)
 
     for o, a in opts:
