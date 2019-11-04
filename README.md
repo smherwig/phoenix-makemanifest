@@ -30,19 +30,29 @@ Manifest Syntax and Directives
 `CAFILE`
 --------
 
+Syntax:
+
 ```
-CAFILE PEM_FILE
+CAFILE <pem_file>
 ```
 
-Translates to
+Translates to:
 
 ```
 phoenix.ca_der = DER_HEX
 ```
 
+Example:
+
+```
+CAFILE config/root.crt
+```
+
 
 `DEBUG`
 -------
+
+Specify whether Graphene should run with debug logging on or off.
 
 ```
 DEBUG on|off
@@ -64,34 +74,76 @@ loader.debug_type = none
 `ENCLAVE_SIZE`
 --------------
 
+Specify the maximum memory for the enclave.  The enclave size is in
+mebibytes, and must be a power of two.
+
 ```
-ENCLAVE_SIZE <SIZE_MB>
+ENCLAVE_SIZE <size_mb>
 ```
 
 Translates to
 
 ```
-sgx.enclave_size = <SIZE_MB>M
+sgx.enclave_size = <size_mb>M
 ```
 
 
 `EXEC`
 ------
 
-```
-EXEC PATH
-```
+Specify the executable to run on Graphene.
 
-Translates to
+Syntax:
 
 ```
-loader.exec = ABSOLUTE_PATH
-loader.execname = BASENAME_PATH
+EXEC <path>
 ```
+
+Translates to:
+
+```
+loader.exec = <absolute(path)>
+loader.execname = <basename(path)>
+```
+
+Example:
+
+```
+EXEC file:/usr/bin/python
+```
+
+In addition, any dependencies of the executable (as per `ldd`) are added
+as trusted files (`sgx.trusted_files.` Graphene directives).
+
 
 
 `MODULE`
 --------
+
+Specify a shared object that the executable might load at runtime (as with
+`dlopen`).
+
+Syntax: 
+
+```
+MODULE <host_uri> 
+```
+
+Translates to the Graphene directives:
+
+```
+sgx.trusted_files.<basename(host_uri)> = <host_uri>
+```
+
+Example:
+
+```
+MODULE file:/lib/x86_64-linux-gnu/libnss_dns.so.2
+```
+
+In addition, any dependencies of the shared library (as per `ldd`) are also
+added as trusted files.
+
 
 
 `MOUNT`
@@ -101,8 +153,14 @@ loader.execname = BASENAME_PATH
 `THREADS`
 ---------
 
+Specify the maximum number of enclave threads.  If *exitless* is also
+specified, the threads issue exitless system calls.
+
+
+Syntax:
+
 ```
-THREADS <NUM> [exitless]
+THREADS <num> [exitless]
 ```
 
 Translates to:
@@ -111,10 +169,16 @@ Translates to:
 sgx.thread_num = NUM
 ```
 
-If exitless is given, also adds
+If *exitless* is spcifies, also adds the Graphene directive:
 
 ```
 sgx.rpc_thread_num = NUM
+```
+
+Example:
+
+```
+THREADS 2
 ```
 
 
@@ -122,3 +186,23 @@ sgx.rpc_thread_num = NUM
 `TIMESERVER`
 ------------
 
+Specifies that time-related system calls should proxy to a timeserver.
+
+Syntax:
+
+```
+TIMESERVER <URI> <PUBLIC_KEY_PEM_PATH> <PERCENT_CALLS>
+```
+
+`URI` is the URI for the timeserver, and must start with `udp:`.
+`PUBLIC_KEY_PEM_PATH` is the path to the timeserver's public key, in PEM
+format.  `PERCENT_CALLS` is the percentage of calls to direct to the timesever.
+For instance, if `1`, Graphene proxies all time-related system calls to the
+timeserver, if 0.5, Graphene proxies half of the calls.
+
+
+Example:
+
+```
+TIMESERVER udp:127.0.0.1:12345 /home/smherwig/src/timeserver/public.pem 1
+```
