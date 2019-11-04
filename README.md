@@ -27,6 +27,9 @@ Note that `generated_offsets.py` is only present after building phoenix.
 Manifest Syntax and Directives
 ==============================
 
+URI refers to a URI on the host machine.
+
+
 `CAFILE`
 --------
 
@@ -113,7 +116,7 @@ EXEC file:/usr/bin/python
 ```
 
 In addition, any dependencies of the executable (as per `ldd`) are added
-as trusted files (`sgx.trusted_files.` Graphene directives).
+as trusted files (that is, as `sgx.trusted_files.` Graphene directives).
 
 
 
@@ -148,6 +151,44 @@ added as trusted files.
 
 `MOUNT`
 -------
+
+### chroot
+
+```
+MOUNT <server_urih> <graphene_mountpoint> chroot ro|rw
+```
+
+### nextfs
+
+```
+MOUNT <server_uri> <graphene_mountpoint> nextfs
+```
+
+### smdish
+
+Also called sm-vericrypt-simple.
+
+```
+MOUNT <server_uri> <graphene_mountpoint> smdish
+```
+
+
+### smuf
+
+Also called sm-vericrypt.
+
+
+```
+MOUNT <server_uri,memdir_uri> <graphene_server_mountpoint,graphene_memdir_mountpoint> smuf
+```
+
+### smc
+
+Also called sm-crypt.
+
+```
+MOUNT <memdir_uri> <graphene_smc_mountpoint,graphene_memdir_mountpoint> smc
+```
 
 
 `THREADS`
@@ -198,7 +239,7 @@ TIMESERVER <URI> <PUBLIC_KEY_PEM_PATH> <PERCENT_CALLS>
 `PUBLIC_KEY_PEM_PATH` is the path to the timeserver's public key, in PEM
 format.  `PERCENT_CALLS` is the percentage of calls to direct to the timesever.
 For instance, if `1`, Graphene proxies all time-related system calls to the
-timeserver, if 0.5, Graphene proxies half of the calls.
+timeserver; if `0.5`, Graphene proxies half of the calls.
 
 
 Example:
