@@ -137,6 +137,14 @@ class Maker:
         cmd = '%s %s' % (executable, ' '.join(args))
         _run_cmd(cmd)
 
+    def finalize(self):
+        # XXX: Hack (the loader expects the manifest.sgx file to
+        # have a name like foo.manifest.sgx
+        if self.outdir:
+            new_name = self._out_path('%s.manifest.sgx' %
+                    os.path.basename(self.outdir))
+            os.rename(self._out_path('manifest.sgx'), new_name)
+
 def main(argv):
     shortopts = 'g:hk:m:o:p:t:v'
     longopts = ['graphene=', 'help', 'key=', 'manifest=', 'outdir=',
@@ -188,6 +196,7 @@ def main(argv):
     maker.make_manifest(premanifest)
     maker.sign_manifest(keyfile)
     maker.get_token()
-
+    maker.finalize()
+    
 if __name__ == '__main__':
     main(sys.argv)
