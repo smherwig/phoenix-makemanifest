@@ -83,7 +83,6 @@ class ManifestMaker:
             'DEBUG':  Directive(self._debug_fn, 1, False),
             'EXEC':   Directive(self._exec_fn, 1, False),
             'MODULE': Directive(self._module_fn, 1, False),
-            'BIND':   Directive(self._bind_fn, 2, False),
             'ENCLAVE_SIZE': Directive(self._enclave_size_fn, 1, False),
             'THREADS': Directive(self._threads_fn, 1, True),
             'TIMESERVER': Directive(self._timeserver_fn, 3, False),
@@ -369,11 +368,6 @@ class ManifestMaker:
         name = os.path.basename(host_uri)
         self.trusted_libs[name] = self._uri_path(host_uri)
         self._add_trusted_depends(host_uri)
-
-    def _bind_fn(self, ip, port):
-        self._check_int(port)
-        name = self._make_name('%s:%s' % (ip, port))
-        self._out('net.allow_bind.%s = %s:%s' % (name, ip, port))
 
     def _enclave_size_fn(self, mb):
         v = self._check_int(mb)

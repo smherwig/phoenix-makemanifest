@@ -27,19 +27,6 @@ Note that `generated_offsets.py` is only present after building phoenix.
 Manifest Syntax and Directives
 ==============================
 
-`BIND`
-------
-
-```
-BIND IP PORT
-```
-
-Translates to
-
-```
-net.allow_bind.IP_PORT = IP:PORT
-```
-
 `CAFILE`
 --------
 
