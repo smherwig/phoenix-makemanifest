@@ -174,6 +174,9 @@ class ManifestMaker:
     # path manipulation
     #------------------------------------------------------
 
+    def _abs_path(self, path):
+        return os.path.abspath(os.path.expandvars(os.path.expanduser(path)))
+
     def _graphene_path(self, subpath):
         return os.path.join(self.graphene, subpath)
 
@@ -183,7 +186,16 @@ class ManifestMaker:
 
     def _uri_to_abs_uri(self, uri):
         path = self._uri_path(uri)
-        return 'file:%s' % os.path.abspath(path)
+        return 'file:%s' % self._abs_path(path)
+
+    def _uri_to_abs_path(self, uri):
+        path = self._uri_path(uri)
+        return self._abs_path(path)
+
+    def _uri_to_expand_uri(self, uri):
+        path = self._uri_path(uri)
+        return 'file:%s' % os.path.expandvars(path)
+
 
     #------------------------------------------------------
     # misc helpers
@@ -253,7 +265,7 @@ class ManifestMaker:
         output = self._run_cmd(cmd)
         for mobj in re.finditer(r'^\s*(.+) => (.+) \(0x[a-f0-9]+\)\s*$', 
                 output, re.MULTILINE):
-            self.trusted_libs[mobj.group(1)] = mobj.group(2)
+            self.trusted_libs[mobj.group(1)] = self._abs_path(mobj.group(2))
 
     def _update_libpaths(self, host_uri, graphene_mntpoint):
         if self.libpaths.has_key(host_uri):
@@ -279,10 +291,11 @@ class ManifestMaker:
         self._out('fs.mount.%s.uri = %s' % (name, host_uri))
 
     def _mount_chroot(self, host_uri, graphene_path, *options):
+        host_uri = self._uri_to_expand_uri(host_uri)
         self._mount_generic(host_uri, graphene_path, 'chroot')
         # special case for ro/rw option for chroot
-        # no additional work for ro; for rw, must add mount to list
-        # of allowed files.
+        # for ro, must add to list of tursted files
+        # for rw, must add mount to list of allowed files.
         if len(options) != 1:
             self._parse_err('chroot mount: missing ro/rw option')
         opt = options[0]
@@ -312,6 +325,7 @@ class ManifestMaker:
         uris = host_uri.split(',')
         if len(uris) != 2:
             self._parse_err('smuf mount: invalid host uri \"%s\"', host_uri)
+        host_uri = '%s,%s' % (uris[0], self._uri_to_expand_uri(uris[1]))
         paths = graphene_path.split(',')
         if len(paths) != 2:
             self._parse_err('smuf mount: invalid path \"%s\"', host_uri)
@@ -329,7 +343,7 @@ class ManifestMaker:
         paths = graphene_path.split(',')
         if len(paths) != 2:
             self._parse_err('smc mount: invalid path \"%s\"', host_uri)
-        self._mount_generic(host_uri, paths[0], 'smc') 
+        self._mount_generic(self._uri_to_expand_uri(host_uri), paths[0], 'smc') 
         self._mount_chroot(host_uri, paths[1], 'rw') 
 
     def _mount_fn(self, host_uri, graphene_path, fstype, *options):
@@ -366,7 +380,7 @@ class ManifestMaker:
 
     def _module_fn(self, host_uri):
         name = os.path.basename(host_uri)
-        self.trusted_libs[name] = self._uri_path(host_uri)
+        self.trusted_libs[name] = self._uri_to_abs_path(host_uri)
         self._add_trusted_depends(host_uri)
 
     def _enclave_size_fn(self, mb):
