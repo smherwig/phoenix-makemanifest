@@ -6,11 +6,11 @@ Create a manifest to run an application on the
 
 
 makemanifest uses an input file (sometimes called a premanifest) that is a
-simplified version of Graphene's manifiest syntax (
-[manifest-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-Manifest-Syntax)
-[manifest-sgx-syntax](https://github.com/oscarlab/grpahene/wiki/Graphene-SGX-Manifest-Syntax),
-while also including directives specific to Phoenix.  Ultimately,
-makemanfiest translates to Graphene Manifest syntax.
+simplified version of Graphene's manifiest syntax
+([manifest-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-Manifest-Syntax)
+ [manifest-sgx-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-SGX-Manifest-Syntax)),
+while also including directives specific to Phoenix.  Ultimately, makemanfiest
+translates to Graphene Manifest syntax.
 
 
 Installation and Usage
