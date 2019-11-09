@@ -1,14 +1,54 @@
 Overview
 ========
 
-Create a Phoenix manifest to run an application.
+Create a manifest to run an application on the
+[Phoenix](https://github.com/smherwig/phoenix) SGX Microkernel.
+
+
+makemanifest uses an input file (sometimes called a premanifest) that is a
+simplified version of Graphene's manifiest syntax (
+[manifest-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-Manifest-Syntax)
+[manifest-sgx-syntax](https://github.com/oscarlab/grpahene/wiki/Graphene-SGX-Manifest-Syntax),
+while also including directives specific to Phoenix.  Ultimately,
+makemanfiest translates to Graphene Manifest syntax.
+
+
+Installation and Usage
+======================
+
+There is nothing to install; the repo simply must be cloned:
+
+
+```
+git clone https://github.com/smherwig/phoenix-makemanifest makemanifest
+```
+
+A user would then write a `manifest.conf` file for the executable they wish to
+run on Phoenix, and invoke `make_sgx.py` to convert `manifest.conf` into a
+manifest suitable for Graphene/Phoenix's loader (`phoenix/Runtime/pal_loader`).
+I call this process "packaging".  For instance, the command-line to package the
+[nextfs](https://github.com/smherwig/phoenix-fileserver) fileserver to run on
+Phoenix is:
+
+```
+cd ~/src/makemanifest
+./make_sgx.py -g ~/src/phoenix -k ~/share/phoenix/enclave-key.pem -p ~/src/fileserver/deploy/manifest.conf -t $PWD -v -o nextfsserver
+```
+
+Under the hod, `make_sgx.py` calls:
+
+- `make_manifest.py`: converts the premanifest to Graphene manifest format
+- `pal-sgx-sign`: signs the Graphene manifest
+- `pal-sgx-get-token`: extracts launch token
 
 
 Files from Phoenix/Graphene
 ===========================
 
-The makemanifest repo contains copies of a number of files in the Phoenix
-repository: 
+The makemanifest repo has copies of several files from the
+[phoenix](https://github.com/smherwig/phoenix) repository.  A user does not
+need to do anything with these files, but  maintainer must
+ensure that these files are in-sync with phoenix as the phoenix source changes:
 
 ```
 cd ~/src/makemanifest
@@ -21,7 +61,6 @@ cp ~/src/phoenix/Pal/src/host/Linux-SGX/generated_offsets.py .
 ```
 
 Note that `generated_offsets.py` is only present after building phoenix.
-
 
 
 Manifest Syntax and Directives
