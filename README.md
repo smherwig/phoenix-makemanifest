@@ -7,14 +7,14 @@ Create a manifest to run an application on the
 
 makemanifest uses an input file (sometimes called a premanifest) that is a
 simplified version of Graphene's manifiest syntax
-([manifest-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-Manifest-Syntax)
- [manifest-sgx-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-SGX-Manifest-Syntax)),
+([manifest-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-Manifest-Syntax),
+ [manifest-sgx-syntax](https://github.com/oscarlab/graphene/wiki/Graphene-SGX-Manifest-Syntax))
 while also including directives specific to Phoenix.  Ultimately, makemanfiest
-translates to Graphene Manifest syntax.
+translates to Graphene Manifest format.
 
 
-Installation and Usage
-======================
+Installation
+============
 
 There is nothing to install; the repo simply must be cloned:
 
@@ -23,10 +23,14 @@ There is nothing to install; the repo simply must be cloned:
 git clone https://github.com/smherwig/phoenix-makemanifest makemanifest
 ```
 
-A user would then write a `manifest.conf` file for the executable they wish to
-run on Phoenix, and invoke `make_sgx.py` to convert `manifest.conf` into a
-manifest suitable for Graphene/Phoenix's loader (`phoenix/Runtime/pal_loader`).
-I call this process "packaging".  For instance, the command-line to package the
+
+Usage
+=====
+
+A user writes a `manifest.conf` file for the executable they wish to run on
+Phoenix, and invokes `make_sgx.py` to convert `manifest.conf` into a manifest
+suitable for Graphene/Phoenix's loader (`phoenix/Runtime/pal_loader`).  This
+process is called *packaging*.  For instance, the command-line to package the
 [nextfs](https://github.com/smherwig/phoenix-fileserver) fileserver to run on
 Phoenix is:
 
@@ -35,7 +39,7 @@ cd ~/src/makemanifest
 ./make_sgx.py -g ~/src/phoenix -k ~/share/phoenix/enclave-key.pem -p ~/src/fileserver/deploy/manifest.conf -t $PWD -v -o nextfsserver
 ```
 
-Under the hod, `make_sgx.py` calls:
+Under the hood, `make_sgx.py` calls:
 
 - `make_manifest.py`: converts the premanifest to Graphene manifest format
 - `pal-sgx-sign`: signs the Graphene manifest
