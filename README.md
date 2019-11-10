@@ -23,6 +23,12 @@ There is nothing to install; the repo simply must be cloned:
 git clone https://github.com/smherwig/phoenix-makemanifest makemanifest
 ```
 
+The script `pal-sgx-get-token` has a dependency on `pycrypto`
+
+```
+pip install pycrypto
+```
+
 
 Usage
 =====
